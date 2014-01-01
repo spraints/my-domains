@@ -4,13 +4,13 @@ require 'uri'
 
 describe 'my domains' do
   context 'git-tfs.com' do
-    it('uses dnsimple') { dnsimple! 'git-tfs.com' }
+    it('uses dnsimple', :dns => true) { dnsimple! 'git-tfs.com' }
     it('gets 200 for apex') { expect(get('http://git-tfs.com/')).to be_200(:title => 'git-tfs') }
     it('gets 200 for www') { expect(get('http://www.git-tfs.com/')).to be_200(:title => 'git-tfs') }
   end
 
   context 'pickardayune.com' do
-    it('uses dnsimple') { dnsimple! 'pickardayune.com' }
+    it('uses dnsimple', :dns => true) { dnsimple! 'pickardayune.com' }
     it('gets 200 for apex') { expect(get('http://pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
     it('gets 200 for www') { expect(get('http://www.pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
     it('gets 200 for chickens') { expect(get('http://chickens.pickardayune.com/')).to be_200(:title => 'Chicken Tracker') }
@@ -19,7 +19,7 @@ describe 'my domains' do
   end
 
   context 'frankfortccc.com' do
-    it('uses dnsimple') { dnsimple! 'frankfortccc.com' }
+    it('uses dnsimple', :dns => true) { dnsimple! 'frankfortccc.com' }
     it('gets 200 for apex') { expect(get('http://frankfortccc.com/')).to be_200 }
     it('redirects to apex from www') { expect(get('http://www.frankfortccc.com/')).to redirect(:to => 'http://frankfortccc.com/') }
     it('gets 200 or redirects for mail') { expect(get('https://mail.frankfortccc.com/')).to be_200 }
@@ -27,13 +27,13 @@ describe 'my domains' do
   end
 
   context 'farmtoforkmarket.com' do
-    it('uses dnsimple') { dnsimple! 'farmtoforkmarket.com' }
+    it('uses dnsimple', :dns => true) { dnsimple! 'farmtoforkmarket.com' }
     it('redirects apex to .org') { expect(get('http://farmtoforkmarket.com')).to redirect(:to => 'http://www.farmtoforkmarket.org') }
     it('redirects www to .org') { expect(get('http://www.farmtoforkmarket.com')).to redirect(:to => 'http://www.farmtoforkmarket.org') }
   end
 
   context 'farmtoforkmarket.org' do
-    it('uses fatcow') { expect(dns('farmtoforkmarket.org')).to be_fatcow }
+    it('uses fatcow', :dns => true) { expect(dns('farmtoforkmarket.org')).to be_fatcow }
     it('gets 200 for apex') { expect(get('http://farmtoforkmarket.org')).to be_200 }
     it('gets 200 for www') { expect(get('http://www.farmtoforkmarket.org')).to be_200 }
   end
