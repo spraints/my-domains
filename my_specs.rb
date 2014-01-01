@@ -14,16 +14,16 @@ describe 'my domains' do
     it('gets 200 for apex') { expect(get('http://pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
     it('gets 200 for www') { expect(get('http://www.pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
     it('gets 200 for chickens') { expect(get('http://chickens.pickardayune.com/')).to be_200(:title => 'Chicken Tracker') }
-    it('gets 200 for reader') { expect(get('http://reader.pickardayune.com/')).to redirect(:to => 'http://reader.pickardayune.com/login') }
-    it('gets 502 for news') { expect(get('http://news.pickardayune.com/')).to be_502 }
+    it('gets 302 for reader') { expect(get('http://reader.pickardayune.com/')).to redirect(:to => 'http://reader.pickardayune.com/login') }
+    it('gets 503 for news') { expect(get('http://news.pickardayune.com/')).to be_503 }
   end
 
   context 'frankfortccc.com' do
     it('uses dnsimple', :dns => true) { dnsimple! 'frankfortccc.com' }
     it('gets 200 for apex') { expect(get('http://frankfortccc.com/')).to be_200 }
     it('redirects to apex from www') { expect(get('http://www.frankfortccc.com/')).to redirect(:to => 'http://frankfortccc.com/') }
-    it('gets 200 or redirects for mail') { expect(get('https://mail.frankfortccc.com/')).to be_200 }
-    it('gets 200 for plan-worship') { expect(get('http://plan-worship.frankfortccc.com/')).to be_200 }
+    it('gets redirects for mail') { expect(get('http://mail.frankfortccc.com/')).to redirect(:to => 'https://mail.google.com/a/frankfortccc.com') }
+    it('gets 200 for plan-worship') { expect(get('http://plan-worship.frankfortccc.com/2013-09-29')).to be_200 }
   end
 
   context 'farmtoforkmarket.com' do
@@ -34,8 +34,8 @@ describe 'my domains' do
 
   context 'farmtoforkmarket.org' do
     it('uses fatcow', :dns => true) { expect(dns('farmtoforkmarket.org')).to be_fatcow }
-    it('gets 200 for apex') { expect(get('http://farmtoforkmarket.org')).to be_200 }
-    it('gets 200 for www') { expect(get('http://www.farmtoforkmarket.org')).to be_200 }
+    it('gets 200 for apex') { expect(get('http://farmtoforkmarket.org')).to be_200(:title => 'Farm to Fork at Normandy Farms') }
+    it('gets 200 for www') { expect(get('http://www.farmtoforkmarket.org')).to be_200(:title => 'Farm to Fork at Normandy Farms') }
   end
 
   # HTTP expectations
@@ -43,35 +43,58 @@ describe 'my domains' do
     uri = URI(url)
     Net::HTTP.new(uri.hostname, uri.port).start do |http|
       response = http.request_get(uri.request_uri)
-      debugger unless $skip
-#      if response.code >= 300 && response.code < 400
-#        debugger
-#      end
-      return response
+      if response.is_a?(Net::HTTPRedirection) && (response["Location"] == '/' || response["Location"] == url)
+        response = http.request_get(uri.request_uri)
+      end
+      return ResponseHelper.new(response)
     end
     nil
   end
 
-  def be_200(options = {})
-    satisfy { |v| v.code == 200 && title?(v.body, options[:title]) }
-  end
+  class ResponseHelper
+    def initialize(http_response)
+      @http_response = http_response
+    end
 
-  def title?(page, expected_title)
-    if expected_title.nil?
-      true
-    elsif page !~ /<title>(.*)<\/title>/
-      false
-    else
-      $1 == expected_title
+    def code
+      @http_response.code.to_i
+    end
+
+    def ok?
+      @http_response.is_a?(Net::HTTPOK)
+    end
+
+    def redirection?
+      @http_response.is_a?(Net::HTTPRedirection)
+    end
+
+    def title?(expected_title)
+      return true if expected_title.nil?
+      return false unless @http_response.body =~ /<title>([^<]*)<\/title>/
+      actual_title = $1.chomp
+      expected_title == actual_title
+    end
+
+    def location?(expected_location)
+      return true if expected_location.nil?
+      expected_location == @http_response['Location']
+    end
+
+    def to_s
+      "<Response #{@http_response.code} #{@http_response.to_hash.inspect} #{@http_response.body}>"
     end
   end
 
-  def be_502
-    pending('is this a 502?')
+  def be_200(options = {})
+    satisfy { |response| response.ok? && response.title?(options[:title]) }
+  end
+
+  def be_503
+    satisfy { |response| response.code == 503 }
   end
 
   def redirect(options = {})
-    pending('is this a redirect?')
+    satisfy { |response| response.redirection? && response.location?(options[:to]) }
   end
 
   # DNS expectations
