@@ -6,9 +6,11 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
 end
 
 namespace :spec do
-  desc "Run just the dns specs"
-  RSpec::Core::RakeTask.new(:dns) do |spec|
-    spec.pattern = 'my_specs.rb'
-    spec.rspec_opts = '-t dns'
+  %W(dns gittfs blog church market).each do |tag|
+    desc "Run just the #{tag} specs"
+    RSpec::Core::RakeTask.new(tag) do |spec|
+      spec.pattern = 'my_specs.rb'
+      spec.rspec_opts = "-t #{tag}"
+    end
   end
 end
