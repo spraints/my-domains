@@ -6,13 +6,13 @@ describe 'my domains' do
   context 'git-tfs.com', :gittfs => true do
     it('uses dnsimple', :dns => true) { dnsimple! 'git-tfs.com' }
     it('gets 200 for apex') { expect(get('http://git-tfs.com/')).to be_200(:title => 'git-tfs') }
-    it('gets 200 for www') { expect(get('http://www.git-tfs.com/')).to be_200(:title => 'git-tfs') }
+    it('redirects to apex from www') { expect(get('http://www.git-tfs.com/')).to redirect(:to => 'http://git-tfs.com/') }
   end
 
   context 'pickardayune.com', :blog => true do
     it('uses dnsimple', :dns => true) { dnsimple! 'pickardayune.com' }
     it('gets 200 for apex') { expect(get('http://pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
-    it('gets 200 for www') { expect(get('http://www.pickardayune.com/')).to be_200(:title => 'the Pickard Ayune') }
+    it('redirects to apex from www') { expect(get('http://www.pickardayune.com/')).to redirect(:to => 'http://pickardayune.com/') }
     it('gets 200 for chickens') { expect(get('http://chickens.pickardayune.com/')).to be_200(:title => 'Chicken Tracker') }
     it('gets 302 for reader') { expect(get('http://reader.pickardayune.com/')).to redirect(:to => 'http://reader.pickardayune.com/login') }
     it('gets 503 for news') { expect(get('http://news.pickardayune.com/')).to be_503 }
