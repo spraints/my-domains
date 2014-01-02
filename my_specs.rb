@@ -43,9 +43,9 @@ describe 'my domains' do
     uri = URI(url)
     Net::HTTP.new(uri.hostname, uri.port).start do |http|
       response = http.request_get(uri.request_uri)
-      if response.is_a?(Net::HTTPRedirection) && (response["Location"] == '/' || response["Location"] == url)
-        response = http.request_get(uri.request_uri)
-      end
+      #if response.is_a?(Net::HTTPRedirection) && (response["Location"] == '/' || response["Location"] == url)
+      #  response = http.request_get(uri.request_uri)
+      #end
       return ResponseHelper.new(response)
     end
     nil
